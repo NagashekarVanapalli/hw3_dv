@@ -44,33 +44,32 @@ h2,h3{
 {
     const width = parseInt(svg.attr("viewBox").split(' ')[2])
     const height = parseInt(svg.attr("viewBox").split(' ')[3])
-    const main_group = svg.append("g")
+    const main = svg.append("g")
         .attr("transform", "translate(0, 50)")
 
    
-    let node_degree={}; 
+    let nodeDeg={}; 
    d3.map(data.links, (d)=>{
-       if(node_degree.hasOwnProperty(d.source)){
-        node_degree[d.source]++
+       if(nodeDeg.hasOwnProperty(d.source)){
+        nodeDeg[d.source]++
        }
        else{
-        node_degree[d.source]=0
+        nodeDeg[d.source]=0
        }
-       if(node_degree.hasOwnProperty(d.target)){
-        node_degree[d.target]++
+       if(nodeDeg.hasOwnProperty(d.target)){
+        nodeDeg[d.target]++
     }
         else{
-            node_degree[d.target]=0
+            nodeDeg[d.target]=0
         }
    })
-       //let Publishers_dict={}
-       //const Publishers=[...new Set(data.nodes.map(d=>d.Publisher.toString()))].map((d,i:number))
-    const scale_radius =d3.scaleLinear()
-   .domain(d3.extent(Object.values(node_degree)))
+
+    const scaleRadius =d3.scaleLinear()
+   .domain(d3.extent(Object.values(nodeDeg)))
    .range([3,12])
                         
     
-    const link_elements = main_group.append("g")
+    const linkEle = main.append("g")
         .attr('transform',`translate(${width/2},${height/2})`)
         .selectAll(".line")
         .data(data.links)
@@ -84,7 +83,7 @@ h2,h3{
         return "gr"+temp
     }
 
-    const node_elements = main_group.append("g")
+    const nodeEle = main.append("g")
         .attr('transform', `translate(${width / 2},${height / 2})`)
         .selectAll(".circle")
         .data(data.nodes)
@@ -93,27 +92,27 @@ h2,h3{
         .attr("class",function (d){return TreatCountryClass(d.Country)})
        .on("mouseover",function (d,data){
         d3.selectAll("Country").text(data.Country)
-        node_elements.classed("inactive",true)
-        const selected_class = d3.select(this).attr("class").split(" ")[0];
-        console.log(selected_class)
-        d3.selectAll("."+selected_class)
+        nodeEle.classed("inactive",true)
+    const classSelect = d3.select(this).attr("class").split(" ")[0];
+    console.log(classSelect)
+    d3.selectAll("."+classSelect)
         .classed("inactive",false)
        
     })
     .on("mouseout",function(d,data){
     
         d3.selectAll("#Paper_Title").text("")
-        d3.selectAll("."+selected_class)
+        d3.selectAll("."+classSelect)
         .classed("inactive",false)
     })
-    node_elements.append("circle")
+    nodeEle.append("circle")
         .attr("r",  (d,Citations)=>{
-           if (node_degree[d.id]!==undefined){
-            return scale_radius(node_degree[d.id])
+           if (nodeDeg[d.id]!==undefined){
+            return scaleRadius(nodeDeg[d.id])
            }
            
            else{
-            return scale_radius(0)
+            return scaleRadius(0)
            }
         })
        
@@ -123,7 +122,7 @@ h2,h3{
 
     let ForceSimulation = d3.forceSimulation(data.nodes)
         .force("collide",
-            d3.forceCollide().radius((d,i)=>{return scale_radius(node_degree[d.id])*1.2}))
+            d3.forceCollide().radius((d,i)=>{return scaleRadius(nodeDeg[d.id])*1.2}))
         .force("x", d3.forceX())
         .force("y", d3.forceY())
         .force("charge", d3.forceManyBody())
@@ -137,9 +136,9 @@ h2,h3{
 
     function ticked()
     {
-    node_elements
+    nodeEle
     .attr('transform', function(d){return `translate(${d.x}, ${d.y})`})
-        link_elements
+        linkEle
         .attr("x1", function(d){return d.source.x})
             .attr("x2", function(d){return d.target.x})
             .attr("y1", function(d){return d.source.y})
@@ -152,7 +151,7 @@ h2,h3{
         .scaleExtent([1, 8])
         .on("zoom", zoomed));
     function zoomed({transform}) {
-        main_group.attr("transform", transform);
+        main.attr("transform", transform);
     }
 
 
